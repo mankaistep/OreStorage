@@ -1,0 +1,11 @@
+name: OreStorage
+version: ${project.version}
+main: me.manaki.plugin.orestorage.OreStorage
+depend: [PlayerData, Vaults]
+commands:
+  orestorage:
+    description: SkyblockBlockData's commands
+    aliases: [os]
+    permission: orestorage.admin
+  kho:
+    description: Kho command

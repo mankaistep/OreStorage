@@ -1,0 +1,118 @@
+# File không bật mặc định chuyển sang mysql
+# Bấm chuột phải thì lấy ra 10 IRON_INGOT
+# Bấm chuột trái thì lấy ra 64 IRON_INGOT
+# Chuột giữa = cho hết đồ vào kho
+# Tự động ghép 9 quặng nhỏ thành block
+# Khi phá được block nào thì sẽ được item thay thế vào data
+# Các block được lựa chọn lưu vào data
+
+sell:
+  enable: true
+  price:
+    STONE: 1
+    DIAMOND: 5.5
+
+storage:
+  file:
+    enable: true
+  mysql:
+    database:
+      host: localhost
+      port: 3306
+      name: rpg
+      user: root
+      password: ''
+max-default: 256
+# Chia hết cho 64
+max-permission: 'blockstorage.{value}'
+gui-size: 9
+gui-title: '&c&lKHO QUẶNG'
+gui-open-cmd: 'kho'
+worlds:
+  - world_skyblock
+  - world_skyblock_nether
+gui:
+  '0':
+    type: COBBLESTONE
+    right-click: 1
+    left-click: 16
+    shift-left-click: 64
+    shift-right-click: 256
+  '1':
+    type: COAL
+    right-click: 1
+    left-click: 16
+    shift-left-click: 64
+    shift-right-click: 256
+  '2':
+    type: REDSTONE
+    right-click: 1
+    left-click: 16
+    shift-left-click: 64
+    shift-right-click: 256
+  '3':
+    type: INK_SACK
+    right-click: 1
+    left-click: 16
+    shift-left-click: 64
+    shift-right-click: 256
+  '4':
+    type: IRON_INGOT
+    right-click: 1
+    left-click: 16
+    shift-left-click: 64
+    shift-right-click: 256
+  '5':
+    type: GOLD_INGOT
+    right-click: 1
+    left-click: 16
+    shift-left-click: 64
+    shift-right-click: 256
+  '6':
+    type: DIAMOND
+    right-click: 1
+    left-click: 16
+    shift-left-click: 64
+    shift-right-click: 256
+  '7':
+    type: EMERALD
+    right-click: 1
+    left-click: 16
+    shift-left-click: 64
+    shift-right-click: 256
+
+option:
+  auto-match: false
+  match:
+    IRON_INGOT: IRON_BLOCK
+    GOLD_INGOT: GOLD_BLOCK
+  replace:
+    STONE: COBBLESTONE
+    COAL_ORE: COAL
+    REDSTONE_ORE: REDSTONE
+    LAPIS_ORE: INK_SACK
+    IRON_ORE: IRON_INGOT
+    GOLD_ORE: GOLD_INGOT
+    DIAMOND_ORE: DIAMOND
+    EMERALD_ORE: EMERALD
+    GLOWING_REDSTONE_ORE: REDSTONE
+  allow-block:
+    - COBBLESTONE
+    - COAL_ORE
+    - REDSTONE_ORE
+    - LAPIS_ORE
+    - IRON_ORE
+    - GOLD_ORE
+    - DIAMOND_ORE
+    - EMERALD_ORE
+    - GLOWING_REDSTONE_ORE
+  loot-bonus-block:
+    - COBBLESTONE
+    - COAL
+    - REDSTONE
+    - LAPIS_LAZULI
+    - INK_SACK
+    - IRON_INGOT
+    - GOLD_INGOT
+    - DIAMOND
+    - EMERALD
