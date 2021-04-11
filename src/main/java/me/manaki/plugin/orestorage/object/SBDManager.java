@@ -23,43 +23,32 @@ public class SBDManager {
 	public static PlayerBlockData get(String name) {
 		return getData(name);
 	}
+
+//	public static int getMax(String player) {
+//		return Utils.getMaxStorage(player);
+//	}
 	
-	public static int getMax(Player player) {	
-		int result = ConfigManager.MAX_DEFAULT;
-		for (int i = 64000 ; i > 0 ; i -= 64) {
-			if (player.hasPermission(ConfigManager.MAX_PERMISSION.replace("{value}", i + ""))) {
-				result = i;
-				break;
-			}
-		}
-		return result;
-	}
+//	public static int getRemain(String player, Material material) {
+//		if (!canAddMore(player, material)) return 0;
+//		PlayerBlockData data = getData(player);
+//		return getMax(player) - data.getAmount(material);
+//	}
 	
-	public static int getMax(String player) {	
-		return Utils.getMaxStorage(player);
-	}
+//	public static int getRemain(Player player, Material material) {
+//		if (!canAddMore(player, material)) return 0;
+//		PlayerBlockData data = getData(player.getName());
+//		return getMax(player) - data.getAmount(material);
+//	}
 	
-	public static int getRemain(String player, Material material) {
-		if (!canAddMore(player, material)) return 0;
-		PlayerBlockData data = getData(player);
-		return getMax(player) - data.getAmount(material);
-	}
+//	public static boolean canAddMore(Player player, Material material) {
+//		PlayerBlockData data = getData(player.getName());
+//		return (data.getAmount(material) < getMax(player));
+//	}
 	
-	public static int getRemain(Player player, Material material) {
-		if (!canAddMore(player, material)) return 0;
-		PlayerBlockData data = getData(player.getName());
-		return getMax(player) - data.getAmount(material);
-	}
-	
-	public static boolean canAddMore(Player player, Material material) {
-		PlayerBlockData data = getData(player.getName());
-		return (data.getAmount(material) < getMax(player));
-	}
-	
-	public static boolean canAddMore(String player, Material material) {
-		PlayerBlockData data = getData(player);
-		return (data.getAmount(material) < getMax(player));
-	}
+//	public static boolean canAddMore(String player, Material material) {
+//		PlayerBlockData data = getData(player);
+//		return (data.getAmount(material) < getMax(player));
+//	}
 	
 	public static PlayerBlockData getData(Player player) {
 		return getData(player.getName());
@@ -125,7 +114,8 @@ public class SBDManager {
 		ItemMeta meta = item.getItemMeta();
 		
 		List<String> lore = new ArrayList<String> ();
-		lore.add("§aSố lượng: §7" + data.getAmount(gi.material) + "/" + getMax(player));
+//		lore.add("§aSố lượng: §7" + data.getAmount(gi.material) + "/" + getMax(player));
+		lore.add("§aSố lượng: §7" + data.getAmount(gi.material));
 		lore.add("§cChuột trái: §fLấy " + gi.leftClick + "");
 		lore.add("§cChuột phải: §fLấy " + gi.rightClick + "");
 		lore.add("§cShift + C.trái: §fLấy " + gi.shiftLeftClick + "");

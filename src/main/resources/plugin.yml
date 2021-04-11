@@ -1,7 +1,7 @@
 name: OreStorage
 version: ${project.version}
 main: me.manaki.plugin.orestorage.OreStorage
-depend: [PlayerData, Vaults]
+depend: [PlayerData, Vault]
 commands:
   orestorage:
     description: SkyblockBlockData's commands

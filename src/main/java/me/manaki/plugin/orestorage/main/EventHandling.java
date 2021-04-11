@@ -1,19 +1,29 @@
 package me.manaki.plugin.orestorage.main;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import me.manaki.plugin.orestorage.OreStorage;
 import me.manaki.plugin.orestorage.object.*;
+import org.apache.logging.log4j.core.appender.routing.Route;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
@@ -21,22 +31,59 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 
 public class EventHandling implements Listener {
-	
-	@EventHandler
-	public void onQuitt(PlayerQuitEvent e) {
-		Player p = e.getPlayer();
-		Utils.saveMaxStorage(p.getName());
-	}
+
+	private final Map<Player, Integer> bonuses = Maps.newHashMap();
+	private final Set<UUID> playerDrops = Sets.newHashSet();
+
+//	@EventHandler
+//	public void onQuitt(PlayerQuitEvent e) {
+//		Player p = e.getPlayer();
+//		Utils.saveMaxStorage(p.getName());
+//	}
 	
 	@EventHandler
 	public void onPlace(BlockPlaceEvent e) {
+		if (e.getPlayer().hasPermission("orestorage.admin")) return;
 		Block b = e.getBlock();
 		b.setMetadata("placed", new FixedMetadataValue(OreStorage.main, ""));
 	}
-	
-	@EventHandler(priority = EventPriority.HIGHEST)
+
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	public void onItemDropByPlayer(PlayerDropItemEvent e) {
+		Item item = e.getItemDrop();
+		UUID id = item.getUniqueId();
+		playerDrops.add(id);
+		Bukkit.getScheduler().runTaskLaterAsynchronously(OreStorage.main, () -> {
+			if (playerDrops.contains(id)) playerDrops.remove(id);
+		}, 20);
+	}
+
+	@EventHandler
+	public void oreDrop(ItemSpawnEvent e) {
+		Item item = e.getEntity();
+
+		// Check itemstack type
+		Material m = item.getItemStack().getType();
+		if (!ConfigManager.REPLACED_BLOCKS.containsValue(m) && !ConfigManager.REPLACED_BLOCKS.containsKey(m)) return;
+
+		// Check world
+		if (!isInRightWorld(item.getWorld())) return;
+
+		// Check playerDrops
+		if (playerDrops.contains(item.getUniqueId())) return;
+
+		e.setCancelled(true);
+	}
+
+	@EventHandler(priority = EventPriority.LOWEST)
 	public void onBreak(BlockBreakEvent e) {
 		Player player = e.getPlayer();
 		if (e.isCancelled()) return;
@@ -51,28 +98,56 @@ public class EventHandling implements Listener {
 			player.sendMessage("§cĐây không phải Island của bạn!");
 			return;
 		}
-		
-		// Replace
-		Material material = ConfigManager.REPLACED_BLOCKS.containsKey(m) ? ConfigManager.REPLACED_BLOCKS.get(m) : m;
-		
+
+		// Pre
+		List<Block> blocks = getAroundOres(block.getLocation(), 3);
+		List<Material> beforeTypes = blocks.stream().map(bl -> bl.getType()).collect(Collectors.toList());
+
+		// After
 		Bukkit.getScheduler().runTaskAsynchronously(OreStorage.main, () -> {
-			// Check full
-			if (!SBDManager.canAddMore(player, material)) {
-				player.sendTitle("§c§lĐẦY KHO", "§7Kho đồ cho " + SBDManager.getOreName(material) + " đã đầy, hãy lấy bớt ra", 10, 40, 10);
-				player.sendMessage("§aĐể gia tăng giới hạn, hãy lên rank cao hơn");
-				return;
+			// Check broken blocks
+			Map<Material, Integer> brokes = Maps.newHashMap();
+			for (int i = 0 ; i < blocks.size() ; i++) {
+				Material type = beforeTypes.get(i);
+				if (blocks.get(i).getType() != type) {
+					brokes.put(type, brokes.getOrDefault(type, 0) + 1);
+				}
 			}
-			
-			PlayerBlockData data = SBDManager.getData(player.getName());
-			int amount = getOreAmount(player, material);
-			data.addBlock(material, amount);
-			SBDManager.checkMatch(player.getName());
-			
-			player.sendTitle("", "§f+" + amount + " §a" + Utils.getTrans(material) + " §fvào /kho" , 0, 15, 0);
-			
+			if (brokes.size() == 0) return;
+
+			String message = "";
+			// Do
+			for (Material type : brokes.keySet()) {
+				Material material = ConfigManager.REPLACED_BLOCKS.getOrDefault(type, type);
+
+				PlayerBlockData data = SBDManager.getData(player.getName());
+				int amount = getOreAmount(player, material) * brokes.get(type);
+				data.addBlock(material, amount);
+				SBDManager.checkMatch(player.getName());
+				message += "§f, " + "+" + amount + " §a" + Utils.getTrans(material);
+			}
+			message = message.replaceFirst("§f, ", "");
+
+			player.sendActionBar(message);
 		});
+
 	}
-	
+
+	public List<Block> getAroundOres(Location l, int r) {
+		List<Block> list = Lists.newArrayList();
+		for (int x = -1 * r ; x < r ; x++) {
+			for (int y = -1 * r ; y < r ; y++) {
+				for (int z = -1 * r ; z < r ; z++) {
+					Material type = l.getBlock().getType();
+					if (!ConfigManager.REPLACED_BLOCKS.containsKey(type)) continue;
+					Location newl = new Location(l.getWorld(), l.getX() + x, l.getY() + y, l.getZ() + z);
+					list.add(newl.getBlock());
+				}
+			}
+		}
+		return list;
+	}
+
 	@EventHandler
 	public void onJoin(PlayerJoinEvent e) {
 		Player player = e.getPlayer();
@@ -169,22 +244,26 @@ public class EventHandling implements Listener {
 				viewer.getInventory().addItem(Utils.getItem(item.material, item.rightClick));
 			}
 			if (e.getClick() == ClickType.MIDDLE) {
-				// Check full
-				int remain = SBDManager.getRemain(player, item.material);
 				int a = getAmount(viewer, new ItemStack(item.material));
-				
-				if (remain > a) {
-					// Có thể thêm hết
-					removeItems(viewer, new ItemStack(item.material));
-					data.addBlock(item.material, a);
-				} else {
-					// Không thể thêm hết
-					removeItems(viewer, new ItemStack(item.material), remain);
-					data.addBlock(item.material, remain);
-					
-					// Thông báo
-					viewer.sendMessage("§cĐầy kho");
-				}
+				removeItems(viewer, new ItemStack(item.material));
+				data.addBlock(item.material, a);
+
+				// Check full
+//				int remain = SBDManager.getRemain(player, item.material);
+//				int a = getAmount(viewer, new ItemStack(item.material));
+//
+//				if (remain > a) {
+//					// Có thể thêm hết
+//					removeItems(viewer, new ItemStack(item.material));
+//					data.addBlock(item.material, a);
+//				} else {
+//					// Không thể thêm hết
+//					removeItems(viewer, new ItemStack(item.material), remain);
+//					data.addBlock(item.material, remain);
+//
+//					// Thông báo
+//					viewer.sendMessage("§cĐầy kho");
+//				}
 			}
 			e.getInventory().setItem(slot, SBDManager.getIcon(item, data, player));
 			SBDManager.save(player);
@@ -253,6 +332,10 @@ public class EventHandling implements Listener {
 			}
 		}
 		return c;
+	}
+
+	public static boolean isInRightWorld(World w) {
+		return ConfigManager.WORLDS.contains(w.getName());
 	}
 	
 	public static boolean isInRightPlace(Player player) {

@@ -1,17 +1,13 @@
-# File không bật mặc định chuyển sang mysql
-# Bấm chuột phải thì lấy ra 10 IRON_INGOT
-# Bấm chuột trái thì lấy ra 64 IRON_INGOT
-# Chuột giữa = cho hết đồ vào kho
-# Tự động ghép 9 quặng nhỏ thành block
-# Khi phá được block nào thì sẽ được item thay thế vào data
-# Các block được lựa chọn lưu vào data
-
+# Tính năng bán
 sell:
   enable: true
+  # Giá của mỗi loại
   price:
     STONE: 1
     DIAMOND: 5.5
 
+# Chế độ lưu trữ
+# Mặc định: file, có thể lưu MySQL
 storage:
   file:
     enable: true
@@ -22,18 +18,28 @@ storage:
       name: rpg
       user: root
       password: ''
+
+# Số lượng ore tối đa mỗi loại mà player có thể cất vào /kho (mặc định là 256)
+# Số lượng phải chia chết cho 64
 max-default: 256
-# Chia hết cho 64
+
+# Permission cho player lưu trữ quặng (tối đa 64000)
 max-permission: 'blockstorage.{value}'
-gui-size: 9
-gui-title: '&c&lKHO QUẶNG'
-gui-open-cmd: 'kho'
+
+# Các world cho phép xài tính năng /kho
 worlds:
   - world_skyblock
   - world_skyblock_nether
+
+# Menu /kho
+gui-size: 9
+gui-title: '&c&lKHO QUẶNG'
+# Cách bố trí GUI
 gui:
   '0':
     type: COBBLESTONE
+    # Số lượng lấy ra của các click
+    # Chuột giữa = cất hết
     right-click: 1
     left-click: 16
     shift-left-click: 64
@@ -51,6 +57,9 @@ gui:
     shift-left-click: 64
     shift-right-click: 256
   '3':
+    # Đây là LAPIS_LAZULI
+    # 1.12 trở xuống không có LAPIS, phải ghi là INK_SACK
+    # api 1.12 ngu như chó
     type: INK_SACK
     right-click: 1
     left-click: 16
@@ -81,11 +90,17 @@ gui:
     shift-left-click: 64
     shift-right-click: 256
 
+# Các cài đặt
 option:
+  # Có tự động match kiểu IRON_INGOT thành IRON_BLOCK hay không
+  # Khuyên: không nên bật cái này
   auto-match: false
   match:
     IRON_INGOT: IRON_BLOCK
     GOLD_INGOT: GOLD_BLOCK
+  # Khi phá block thì sẽ được cái gì
+  # STONE được COBBLESTONE
+  # COAL_ORE được COAL
   replace:
     STONE: COBBLESTONE
     COAL_ORE: COAL
@@ -96,6 +111,8 @@ option:
     DIAMOND_ORE: DIAMOND
     EMERALD_ORE: EMERALD
     GLOWING_REDSTONE_ORE: REDSTONE
+
+  # Những block cho phép phá để vào /kho
   allow-block:
     - COBBLESTONE
     - COAL_ORE
@@ -106,6 +123,8 @@ option:
     - DIAMOND_ORE
     - EMERALD_ORE
     - GLOWING_REDSTONE_ORE
+
+  # Những block cho phép áp dụng tính phù phép Gia tài
   loot-bonus-block:
     - COBBLESTONE
     - COAL

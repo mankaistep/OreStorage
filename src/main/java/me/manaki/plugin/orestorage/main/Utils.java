@@ -14,22 +14,22 @@ import mk.plugin.playerdata.storage.PlayerDataAPI;
 
 public class Utils {
 	
-	public static void saveMaxStorage(String name) {
-		int max = getMaxStorage(name);
-		PlayerData pd = PlayerDataAPI.get(name, "orestorage");
-		pd.set("max", max + "");
-		pd.save();
-	}
+//	public static void saveMaxStorage(String name) {
+//		int max = getMaxStorage(name);
+//		PlayerData pd = PlayerDataAPI.get(name, "orestorage");
+//		pd.set("max", max + "");
+//		pd.save();
+//	}
 	
-	public static int getMaxStorage(String name) {
-		Player p = Bukkit.getPlayer(name);
-		if (p == null) {
-			PlayerData pd = PlayerDataAPI.get(name, "orestorage");
-			if (pd.hasData("max")) return Integer.valueOf(pd.getValue("max"));
-			return ConfigManager.MAX_DEFAULT;
-		}
-		return SBDManager.getMax(p);
-	}
+//	public static int getMaxStorage(String name) {
+//		Player p = Bukkit.getPlayer(name);
+//		if (p == null) {
+//			PlayerData pd = PlayerDataAPI.get(name, "orestorage");
+//			if (pd.hasData("max")) return Integer.valueOf(pd.getValue("max"));
+//			return ConfigManager.MAX_DEFAULT;
+//		}
+//		return SBDManager.getMax(p);
+//	}
 	
 	public static int randomInt(int min, int max) {
 		return new Random().nextInt(max + 1 - min) + min;
