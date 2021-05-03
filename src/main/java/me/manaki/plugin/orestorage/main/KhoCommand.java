@@ -35,9 +35,11 @@ public class KhoCommand implements CommandExecutor {
 				}
 //				Player target = Bukkit.getPlayer(args[1]);
 				String target = args[1];
-				if (!AllowedUsers.get(target).contains(player.getName().toLowerCase()))  {
-					player.sendMessage("§cBạn không thể dùng kho của người chơi này");
-					return false;
+				if (!player.hasPermission("orestorage.admin")) {
+					if (!AllowedUsers.get(target).contains(player.getName().toLowerCase()))  {
+						player.sendMessage("§cBạn không thể dùng kho của người chơi này");
+						return false;
+					}
 				}
 				SBDManager.open(target, player);
 			}

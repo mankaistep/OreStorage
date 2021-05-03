@@ -5,7 +5,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import me.manaki.plugin.orestorage.OreStorage;
 import me.manaki.plugin.orestorage.object.*;
-import org.apache.logging.log4j.core.appender.routing.Route;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -18,7 +19,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.inventory.ClickType;
@@ -42,12 +42,6 @@ public class EventHandling implements Listener {
 
 	private final Map<Player, Integer> bonuses = Maps.newHashMap();
 	private final Set<UUID> playerDrops = Sets.newHashSet();
-
-//	@EventHandler
-//	public void onQuitt(PlayerQuitEvent e) {
-//		Player p = e.getPlayer();
-//		Utils.saveMaxStorage(p.getName());
-//	}
 	
 	@EventHandler
 	public void onPlace(BlockPlaceEvent e) {
@@ -109,7 +103,7 @@ public class EventHandling implements Listener {
 			Map<Material, Integer> brokes = Maps.newHashMap();
 			for (int i = 0 ; i < blocks.size() ; i++) {
 				Material type = beforeTypes.get(i);
-				if (blocks.get(i).getType() != type) {
+				if (ConfigManager.ALLOWED_BLOCKS.contains(type) && blocks.get(i).getType() != type ) {
 					brokes.put(type, brokes.getOrDefault(type, 0) + 1);
 				}
 			}
@@ -126,9 +120,10 @@ public class EventHandling implements Listener {
 				SBDManager.checkMatch(player.getName());
 				message += "§f, " + "+" + amount + " §a" + Utils.getTrans(material);
 			}
-			message = message.replaceFirst("§f, ", "");
+			message = message.replaceFirst("§f, ", "") + " đã vào kho";
 
-			player.sendActionBar(message);
+//			player.sendActionBar(message);
+			player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(message));
 		});
 
 	}
@@ -138,9 +133,9 @@ public class EventHandling implements Listener {
 		for (int x = -1 * r ; x < r ; x++) {
 			for (int y = -1 * r ; y < r ; y++) {
 				for (int z = -1 * r ; z < r ; z++) {
-					Material type = l.getBlock().getType();
-					if (!ConfigManager.REPLACED_BLOCKS.containsKey(type)) continue;
 					Location newl = new Location(l.getWorld(), l.getX() + x, l.getY() + y, l.getZ() + z);
+					Material type = newl.getBlock().getType();
+					if (!ConfigManager.ALLOWED_BLOCKS.contains(type)) continue;
 					list.add(newl.getBlock());
 				}
 			}
@@ -204,7 +199,31 @@ public class EventHandling implements Listener {
 			PlayerBlockData data = SBDManager.getData(player);
 			SBDGUIItem item = ConfigManager.GUIITEMS.get(slot);
 			int amount = data.getAmount(item.material);
-			
+
+			if (e.getClick() == ClickType.MIDDLE) {
+				int a = getAmount(viewer, new ItemStack(item.material));
+				removeItems(viewer, new ItemStack(item.material));
+				data.addBlock(item.material, a);
+				e.getInventory().setItem(slot, SBDManager.getIcon(item, data, player));
+				return;
+				// Check full
+//				int remain = SBDManager.getRemain(player, item.material);
+//				int a = getAmount(viewer, new ItemStack(item.material));
+//
+//				if (remain > a) {
+//					// Có thể thêm hết
+//					removeItems(viewer, new ItemStack(item.material));
+//					data.addBlock(item.material, a);
+//				} else {
+//					// Không thể thêm hết
+//					removeItems(viewer, new ItemStack(item.material), remain);
+//					data.addBlock(item.material, remain);
+//
+//					// Thông báo
+//					viewer.sendMessage("§cĐầy kho");
+//				}
+			}
+
 			// If Inventory is full
 			if (viewer.getInventory().firstEmpty() == -1) {
 				viewer.sendMessage("§cKho đồ đầy, hãy để ra ô trống đủ để nhận");
@@ -243,31 +262,8 @@ public class EventHandling implements Listener {
 				data.addBlock(item.material, -1 * item.rightClick);
 				viewer.getInventory().addItem(Utils.getItem(item.material, item.rightClick));
 			}
-			if (e.getClick() == ClickType.MIDDLE) {
-				int a = getAmount(viewer, new ItemStack(item.material));
-				removeItems(viewer, new ItemStack(item.material));
-				data.addBlock(item.material, a);
-
-				// Check full
-//				int remain = SBDManager.getRemain(player, item.material);
-//				int a = getAmount(viewer, new ItemStack(item.material));
-//
-//				if (remain > a) {
-//					// Có thể thêm hết
-//					removeItems(viewer, new ItemStack(item.material));
-//					data.addBlock(item.material, a);
-//				} else {
-//					// Không thể thêm hết
-//					removeItems(viewer, new ItemStack(item.material), remain);
-//					data.addBlock(item.material, remain);
-//
-//					// Thông báo
-//					viewer.sendMessage("§cĐầy kho");
-//				}
-			}
 			e.getInventory().setItem(slot, SBDManager.getIcon(item, data, player));
 			SBDManager.save(player);
-		
 		}
 	}
 	
